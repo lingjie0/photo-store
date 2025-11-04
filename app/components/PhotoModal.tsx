@@ -2,7 +2,13 @@
 
 import Image from 'next/image';
 
-export default function PhotoModal({src, alt, onClose}) {
+type PhotoModalProps = {
+    src: string;
+    alt: string;
+    onClose: () => void;
+}
+
+export default function PhotoModal({ src, alt, onClose }: PhotoModalProps) {
     if (!src) return null;
 
     return (

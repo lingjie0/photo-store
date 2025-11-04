@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { supabase } from "../supabase-utils/supabaseClient";
 import { useRouter } from "next/navigation";
 
@@ -8,19 +8,28 @@ export default function PhotoUploader() {
     const [uploading, setUploading] = useState(false);
     const router = useRouter();
 
-    async function handleFileUpload(event) {
+    interface RevalidateBody { path: string; }
+    interface SupabaseUser { id: string; }
+    interface SupabaseAuthResponse { data: { user: SupabaseUser | null }; }
+
+    async function handleFileUpload(event: ChangeEvent<HTMLInputElement>): Promise<void> {
         try {
             setUploading(true);
-            const file = event?.target.files[0];
+            const file: File | undefined = event.target.files?.[0];
+
+            if (!file) {
+                throw new Error('No file selected for upload');
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}.${fileExt}`;
-            const {data: {user}} = await supabase.auth.getUser();
+            const {data: {user}} = await supabase.auth.getUser() as SupabaseAuthResponse;
 
             if (!user)  {
                 throw new Error('user not authenticated for photo upload');
             }
-            const filePath = `user_uploads/${user.id}/${fileName}`;
-            const {error} = await supabase.storage.from('photos').upload(filePath, file);
+            const filePath: string = `user_uploads/${user.id}/${fileName}`;
+            const {error} = await supabase.storage.from('photos').upload(filePath, file) as { error: Error | null };
 
             if (error) {
                 throw error;
@@ -31,7 +40,7 @@ export default function PhotoUploader() {
                 headers: {
                     'Content-type': 'application/json'
                 },
-                body: JSON.stringify({path: '/photos'})
+                body: JSON.stringify({path: '/photos'} as RevalidateBody)
             });
             router.refresh();
 

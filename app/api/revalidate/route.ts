@@ -1,16 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import type { NextRequest } from "next/server";
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const path = body.path;
         const cookieStore = await cookies();
 
         const supabase = createServerClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+            process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
             {
                 cookies: {
                     get: (name) => cookieStore.get(name)?.value,
